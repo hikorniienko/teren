@@ -1,0 +1,28 @@
+{
+  "name": "nerva",
+  "description": "Library for writing game logic and orchestrating asynchronous flows.",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "files": [
+    "lib/index.js",
+    "lib/types"
+  ],
+  "author": "Vladyslav Korniienko",
+  "license": "MIT",
+  "scripts": {
+    "build": "rsbuild build",
+    "check": "biome check --write",
+    "dev": "rsbuild dev --open",
+    "format": "biome format --write",
+    "preview": "rsbuild preview",
+    "build-lib": "rslib build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.0.0",
+    "@rsbuild/core": "1.4.2",
+    "@rslib/core": "0.10.5",
+    "typescript": "5.8.3"
+  }
+}
