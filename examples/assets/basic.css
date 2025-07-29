@@ -1,0 +1,14 @@
+#root > div {
+  width: 10vw;
+  height: 10vw;
+  background-color: #0b66f9;
+  border-radius: 2vw;
+
+  color: white;
+  font-size: 4vw;
+  font-weight: bold;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,36 +1,386 @@
-# Rsbuild project
+# teren
+Teren is a lightweight library for writing modular game logic using generators, events, state, and a controllable update loop.
 
-## Setup
+---
 
-Install the dependencies:
+[See the Examples!](https://)
+
+## Table of content
+- [Installation](#installation)
+- [Examples](https://)
+- [About](#about)
+- [Loop](#loop)
+  - [dt](#dt)
+  - [pause()](#pause)
+  - [resume()](#resume)
+  - [addUpdate()](#addupdatecallback)
+  - [removeUpdate()](#removeupdatecallback)
+  - [addRender()](#addrendercallback)
+  - [removeRender()](#removerendercallback)
+- [Event](#event)
+  - [get()](#get)
+  - [on()](#oncallback)
+  - [onOnce()](#ononcecallback)
+  - [off()](#offcallback)
+  - [emit()](#emitcontext)
+  - [await()](#await)
+- [Runner](#runner)
+  - [cancel()](#cancel)
+- [Runner.sleep()](#runnersleepseconds)
+- [Runner.race()](#runnerraceobj)
+- [Runner.tween()](#runnertweenfromtodurationoptionscancelable)
+- [License](#license)
+
+## Installation
+
+---
+### npm
 
 ```bash
-pnpm install
+npm install teren
 ```
 
-## Get started
+## About
 
-Start the dev server, and the app will be available at [http://localhost:3000](http://localhost:3000).
+---
 
-```bash
-pnpm dev
+In web games, async code often causes problems: timers and promises are hard to cancel deep in the code, and some code still runs after the scene ends. Teren solves this by using generators to write game logic.
+
+**When to Use**
+
+- When you make a game and want to control the steps: wait, play an animation, wait for a click, check something, cancel some fork.
+- When you want to pause game logic and animations when the tab changes.
+- When you want to write logic like normal step-by-step code, but still keep control.
+
+Teren is built for games with modular logic. It uses generators, works with the game loop, and helps you write logic that is easy to follow, control, and cancel.
+
+## Loop
+
+---
+
+The Loop class is a singleton that handles game update and render calls every frame.
+By default, the loop is running.
+
+### dt
+
+Type: `number`
+
+Delta time in seconds.
+
+```ts
+let x = 0;
+Loop.instance.addUpdate(() => {
+  x += Loop.instance.dt;
+})
 ```
 
-Build the app for production:
+### pause()
+Pauses the loop.
 
-```bash
-pnpm build
+```ts
+Loop.instance.pause();
 ```
 
-Preview the production build locally:
+### resume()
+Resumes the loop.
 
-```bash
-pnpm preview
+```ts
+Loop.instance.resume();
 ```
 
-## Learn more
+### addUpdate(callback)
 
-To learn more about Rsbuild, check out the following resources:
+Adds an update callback to the loop.
 
-- [Rsbuild documentation](https://rsbuild.rs) - explore Rsbuild features and APIs.
-- [Rsbuild GitHub repository](https://github.com/web-infra-dev/rsbuild) - your feedback and contributions are welcome!
+| Params   | Type         |
+|----------|--------------|
+| callback | `() => void` |
+
+
+```ts
+Loop.instance.addUpdate(() => {})
+```
+
+### removeUpdate(callback)
+Removes an update callback from the loop.
+
+
+| Params   | Type         |
+|----------|--------------|
+| callback | `() => void` |
+
+
+```ts
+Loop.instance.removeUpdate(() => {})
+```
+
+### addRender(callback)
+Adds a render callback to the loop.
+
+
+| Params   | Type         |
+|----------|--------------|
+| callback | `() => void` |
+
+
+```ts
+Loop.instance.addRender(() => {})
+```
+
+### removeRender(callback)
+Removes a render callback from the loop.
+
+
+| Params   | Type         |
+|----------|--------------|
+| callback | `() => void` |
+
+
+```ts
+Loop.instance.removeRender(() => {})
+```
+
+## Event
+
+---
+
+Event class that combines state management with event emitters.
+
+Each event holds a context object (state), which can be updated and observed.
+Listeners are triggered on `.emit()` with the latest merged context.
+
+Ideal for scenarios like game signals, UI events, or shared state updates with side effects.
+
+
+| Params     | Type                  | Default |
+|------------|-----------------------|---------|
+| context    | `Record<string, any>` | `{}`    |
+| immutable  | `boolean`             | `true`  |
+
+```ts
+const counter = new Event<{ value: number }>(
+  { value: 0 }, //default context
+  true, // is immutable context, default true
+)
+```
+
+### get()
+Return: `context`
+
+Gets the current event context.
+
+```ts
+console.log(counter.get());
+```
+
+### on(callback)
+Adds a callback to the event.
+
+| Params   | Type         |
+|----------|--------------|
+| callback | `() => void` |
+
+```ts
+counter.on(() => {
+    console.log(counter.get());
+})
+```
+
+### onOnce(callback)
+Adds a one-time callback to the event.
+
+| Params   | Type         |
+|----------|--------------|
+| callback | `() => void` |
+
+```ts
+counter.onOnce(() => {
+  console.log(counter.get());
+})
+```
+
+### off(callback)
+Removes a callback from the event.
+
+| Params   | Type         |
+|----------|--------------|
+| callback | `() => void` |
+
+```ts
+const callback = () => {
+  console.log(counter.get());
+}
+counter.off(callback);
+```
+
+### emit(context)
+Return: `context`
+
+Merges and emits a partial context.
+
+| Params  | Type                    |
+|---------|-------------------------|
+| context | `Partial<Context> = {}` |
+
+```ts
+// Emit with context: updates the context and triggers all subscribers
+counter.emit({value: 1});
+
+// Emit without context: triggers all subscribers with the current context
+counter.emit();
+```
+
+### await()
+Return: `Promise<context>`
+
+Waits for the next event emission.
+
+```ts
+// Await event in a runner
+new Runner(function* () {
+  yield counter.await();
+  console.log('Counter:', counter.get());
+});
+```
+
+## Runner
+
+---
+
+Runner class to manage asynchronous operations using generators.
+
+Supports yielding:
+- Generator functions
+- Promises
+- Other Runners (like forked operations, which will be stopped if parent is cancelled)
+- Runner.sleep(seconds)
+- Runner.tween(from, to, duration)
+- Runner.race(promises)
+
+Automatically updated every frame via Loop.
+Runner.cancel() stops itself and all child runners.
+
+
+| Params      | Type                  | Default |
+|-------------|-----------------------|---------|
+| fn          | `function * (): void` |         |
+| cancellable | `boolean`             | `true`  |
+
+```ts
+const flow: Runner = new Runner(
+  function* () {
+    console.log('Start flow');
+    
+    // Execute second flow like fork
+    const secondFlow: Runner = yield new Runner(function* () {
+      console.log('Second flow start');
+      
+      // Sleep 1s
+      yield Runner.sleep(1);
+      console.log('Second flow await');
+      
+      // Sleep 1s
+      yield Runner.sleep(1);
+      console.log('Second flow not execute');
+    });
+    
+    // Sleep 1s
+    yield Runner.sleep(1);
+    
+    // Cancel second flow
+    secondFlow.cancel();
+  }, //generator function
+  true, // stopped if parent is cancelled, default true
+);
+```
+
+### cancel()
+Cancel runner and children(if children can be cancelled).
+
+```ts
+const runner = new Runner(function* () {});
+runner.cancel();
+```
+
+## Runner.sleep(seconds)
+
+---
+
+Pauses execution for N seconds (based on deltaTime).
+
+| Params      | Type      | Default |
+|-------------|-----------|---------|
+| seconds     | `number`  |         |
+
+
+```ts
+new Runner(function* () {
+    yield Runner.sleep(2);
+})
+```
+
+## Runner.race(obj)
+
+---
+
+Waits for the first resolving promise and returns its key.
+
+| Params | Type                               |
+|--------|------------------------------------|
+| obj    | `Record<string, Promise<unknown>>` |
+
+```ts
+new Runner(function* () {
+    const result = yield Runner.race({
+        wait: Runner.sleep(1),
+        click: myEvent.await(),
+    });
+
+    if ('click' in result) {
+        // do something
+    }
+})
+```
+
+## Runner.tween(from,to,duration,options,cancelable)
+
+---
+
+Animates numeric values from `from[]` to `to[]` over time.
+
+
+| Params             | Type                                 | Default |
+|--------------------|--------------------------------------|---------|
+| from               | `Array<Record<string, unknown>>`     |         |
+| to                 | `Array<Record<string, unknown>>`     |         |
+| duration           | `number`                             |         |
+| options.easing     | `(t: number) => number \| undefined` |         |
+| options.onUpdate   | `() => void \| undefined`            |         |
+| cancellable        | `boolean`                            | true    |
+
+```ts
+import { Runner, linear } from 'teren';
+
+new Runner(function* () {
+    const testTween = { x: 0, y: 0 };
+    const testTween2 = { x: 0, y: 0 };
+
+    yield Runner.tween(
+        [testTween, testTween2],
+        [{ x: 100, y: 100 },{ x: 100, y: 100 }],
+        2,
+        {
+            easing: linear,
+            onUpdate: () => {}
+        },
+        true // true means this tween be stopped if parent is cancelled
+    );
+})
+```
+
+## License
+
+---
+
+This project is licensed under the [MIT License](./LICENSE).  
+© 2025 Vladyslav Korniienko

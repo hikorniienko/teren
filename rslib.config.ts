@@ -8,7 +8,7 @@ export default {
   lib: [
     {
       format: 'esm',
-      syntax: 'es2017',
+      syntax: 'es2016',
       dts: {
         distPath: './lib/types',
       },

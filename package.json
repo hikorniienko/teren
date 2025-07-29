@@ -1,6 +1,6 @@
 {
-  "name": "nerva",
-  "description": "Library for writing game logic and orchestrating asynchronous flows.",
+  "name": "teren",
+  "description": "Teren is a lightweight library for writing modular game logic using generators, events, state, and a controllable update loop.",
   "version": "1.0.0",
   "type": "module",
   "main": "lib/index.js",
@@ -13,7 +13,6 @@
   "license": "MIT",
   "scripts": {
     "build": "rsbuild build",
-    "check": "biome check --write",
     "dev": "rsbuild dev --open",
     "format": "biome format --write",
     "preview": "rsbuild preview",
@@ -24,5 +23,19 @@
     "@rsbuild/core": "1.4.2",
     "@rslib/core": "0.10.5",
     "typescript": "5.8.3"
-  }
+  },
+  "keywords": [
+    "game",
+    "logic",
+    "async",
+    "generator",
+    "flow",
+    "loop",
+    "event",
+    "branching",
+    "tree",
+    "fork",
+    "coroutine",
+    "state"
+  ]
 }

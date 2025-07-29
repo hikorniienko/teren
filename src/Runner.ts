@@ -187,7 +187,6 @@ function tween<T extends Array<Record<string, unknown>>>(
 
     elapsed += Loop.instance.dt;
     const t = Math.min(elapsed / duration, 1);
-    const eased = options?.easing ? options.easing(t) : t;
 
     for (let i = 0; i < from.length; i++) {
       const fromObj = from[i];
@@ -196,7 +195,12 @@ function tween<T extends Array<Record<string, unknown>>>(
         const a = fromObj[key];
         const b = toObj[key];
         if (typeof a === 'number' && typeof b === 'number') {
-          fromObj[key] = a + (b - a) * eased;
+          if (options?.easing) {
+            fromObj[key] = a + (b - a) * options.easing(t);
+          } else {
+            const alpha = 1 - Math.exp(-1 * Loop.instance.dt);
+            fromObj[key] = a + (b - a) * alpha;
+          }
         }
       }
     }
