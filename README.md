@@ -1,10 +1,6 @@
 # teren
 Teren is a lightweight library for writing modular game logic using generators, events, state, and a controllable update loop.
 
----
-
----
-
 [See the Examples!](https://)
 
 ## Table of content
@@ -33,10 +29,6 @@ Teren is a lightweight library for writing modular game logic using generators, 
 - [Runner.tween()](#runnertweenfromtodurationoptionscancelable)
 - [License](#license)
 
----
-
----
-
 ## Installation
 
 ### npm
@@ -44,10 +36,6 @@ Teren is a lightweight library for writing modular game logic using generators, 
 ```bash
 npm install teren
 ```
-
----
-
----
 
 ## About
 
@@ -60,10 +48,6 @@ In web games, async code often causes problems: timers and promises are hard to 
 - When you want to write logic like normal step-by-step code, but still keep control.
 
 Teren is built for games with modular logic. It uses generators, works with the game loop, and helps you write logic that is easy to follow, control, and cancel.
-
----
-
----
 
 ## Loop
 
@@ -148,11 +132,6 @@ Removes a render callback from the loop.
 ```ts
 Loop.instance.removeRender(() => {})
 ```
-
----
-
----
-
 
 ## Event
 
@@ -254,9 +233,6 @@ new Runner(function* () {
   console.log('Counter:', counter.get());
 });
 ```
----
-
----
 
 ## Runner
 
@@ -314,10 +290,6 @@ const runner = new Runner(function* () {});
 runner.cancel();
 ```
 
----
-
----
-
 ## Runner.sleep(seconds)
 
 Pauses execution for N seconds (based on deltaTime).
@@ -332,10 +304,6 @@ new Runner(function* () {
     yield Runner.sleep(2);
 })
 ```
-
----
-
----
 
 ## Runner.race(obj)
 
@@ -357,10 +325,6 @@ new Runner(function* () {
     }
 })
 ```
-
----
-
----
 
 ## Runner.tween(from,to,duration,options,cancelable)
 
@@ -397,11 +361,6 @@ new Runner(function* () {
     );
 })
 ```
-
----
-
----
-
 
 ## License
 
