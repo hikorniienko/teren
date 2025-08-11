@@ -3,6 +3,8 @@ Teren is a lightweight library for writing modular game logic using generators, 
 
 ---
 
+---
+
 [See the Examples!](https://)
 
 ## Table of content
@@ -31,18 +33,23 @@ Teren is a lightweight library for writing modular game logic using generators, 
 - [Runner.tween()](#runnertweenfromtodurationoptionscancelable)
 - [License](#license)
 
-## Installation
+---
 
 ---
+
+## Installation
+
 ### npm
 
 ```bash
 npm install teren
 ```
 
-## About
+---
 
 ---
+
+## About
 
 In web games, async code often causes problems: timers and promises are hard to cancel deep in the code, and some code still runs after the scene ends. Teren solves this by using generators to write game logic.
 
@@ -54,9 +61,11 @@ In web games, async code often causes problems: timers and promises are hard to 
 
 Teren is built for games with modular logic. It uses generators, works with the game loop, and helps you write logic that is easy to follow, control, and cancel.
 
-## Loop
+---
 
 ---
+
+## Loop
 
 The Loop class is a singleton that handles game update and render calls every frame.
 By default, the loop is running.
@@ -140,9 +149,12 @@ Removes a render callback from the loop.
 Loop.instance.removeRender(() => {})
 ```
 
-## Event
+---
 
 ---
+
+
+## Event
 
 Event class that combines state management with event emitters.
 
@@ -242,10 +254,11 @@ new Runner(function* () {
   console.log('Counter:', counter.get());
 });
 ```
-
-## Runner
+---
 
 ---
+
+## Runner
 
 Runner class to manage asynchronous operations using generators.
 
@@ -267,8 +280,7 @@ Runner.cancel() stops itself and all child runners.
 | cancellable | `boolean`             | `true`  |
 
 ```ts
-const flow: Runner = new Runner(
-  function* () {
+const flow: Runner = new Runner(function* () {
     console.log('Start flow');
     
     // Execute second flow like fork
@@ -302,9 +314,11 @@ const runner = new Runner(function* () {});
 runner.cancel();
 ```
 
-## Runner.sleep(seconds)
+---
 
 ---
+
+## Runner.sleep(seconds)
 
 Pauses execution for N seconds (based on deltaTime).
 
@@ -319,9 +333,11 @@ new Runner(function* () {
 })
 ```
 
-## Runner.race(obj)
+---
 
 ---
+
+## Runner.race(obj)
 
 Waits for the first resolving promise and returns its key.
 
@@ -342,21 +358,24 @@ new Runner(function* () {
 })
 ```
 
-## Runner.tween(from,to,duration,options,cancelable)
+---
 
 ---
+
+## Runner.tween(from,to,duration,options,cancelable)
 
 Animates numeric values from `from[]` to `to[]` over time.
 
 
-| Params             | Type                                 | Default |
-|--------------------|--------------------------------------|---------|
-| from               | `Array<Record<string, unknown>>`     |         |
-| to                 | `Array<Record<string, unknown>>`     |         |
-| duration           | `number`                             |         |
-| options.easing     | `(t: number) => number \| undefined` |         |
-| options.onUpdate   | `() => void \| undefined`            |         |
-| cancellable        | `boolean`                            | true    |
+| Params               | Type                                 | Default  |
+|----------------------|--------------------------------------|----------|
+| from                 | `Array<Record<string, unknown>>`     |          |
+| to                   | `Array<Record<string, unknown>>`     |          |
+| duration             | `number`                             |          |
+| options.easing       | `(t: number) => number \| undefined` | (t) => t |
+| options.onUpdate     | `() => void \| undefined`            |          |
+| options.smoothFactor | `number`                             | 0.02     |
+| cancellable          | `boolean`                            | true     |
 
 ```ts
 import { Runner, linear } from 'teren';
@@ -371,16 +390,20 @@ new Runner(function* () {
         2,
         {
             easing: linear,
-            onUpdate: () => {}
+            onUpdate: () => {},
+            smoothFactor: 0.05 // 0 - 1
         },
         true // true means this tween be stopped if parent is cancelled
     );
 })
 ```
 
-## License
+---
 
 ---
+
+
+## License
 
 This project is licensed under the [MIT License](./LICENSE).  
 © 2025 Vladyslav Korniienko

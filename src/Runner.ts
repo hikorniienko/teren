@@ -160,6 +160,7 @@ function tween<T extends Array<Record<string, unknown>>>(
   options: {
     easing?: (t: number) => number;
     onUpdate?: () => void;
+    smoothFactor?: number;
   } = {},
   cancellable: boolean = true,
 ): {
@@ -169,6 +170,15 @@ function tween<T extends Array<Record<string, unknown>>>(
   extraPromise: () => Promise<void>;
 } {
   const keys = from.map((el) => Object.keys(el));
+  const prevValues = from.map((obj) => {
+    const record: Record<string, number> = {};
+    for (const key of Object.keys(obj)) {
+      if (typeof obj[key] === 'number') record[key] = obj[key] as number;
+    }
+    return record;
+  });
+  const smoothFactor = options.smoothFactor ?? 0.02;
+
   let canceled = false;
   let elapsed = 0;
   let resolve: () => void;
@@ -187,6 +197,7 @@ function tween<T extends Array<Record<string, unknown>>>(
 
     elapsed += Loop.instance.dt;
     const t = Math.min(elapsed / duration, 1);
+    const e = options?.easing ? options.easing : (t: number) => t;
 
     for (let i = 0; i < from.length; i++) {
       const fromObj = from[i];
@@ -195,12 +206,10 @@ function tween<T extends Array<Record<string, unknown>>>(
         const a = fromObj[key];
         const b = toObj[key];
         if (typeof a === 'number' && typeof b === 'number') {
-          if (options?.easing) {
-            fromObj[key] = a + (b - a) * options.easing(t);
-          } else {
-            const alpha = 1 - Math.exp(-1 * Loop.instance.dt);
-            fromObj[key] = a + (b - a) * alpha;
-          }
+          const target = a + (b - a) * e(t);
+          prevValues[i][key] =
+            prevValues[i][key] + (target - prevValues[i][key]) * smoothFactor;
+          fromObj[key] = prevValues[i][key];
         }
       }
     }
