@@ -18,10 +18,9 @@ Teren is a lightweight library for writing modular game logic using generators, 
 - [Event](#event)
   - [get()](#get)
   - [on()](#oncallback)
-  - [onOnce()](#ononcecallback)
   - [off()](#offcallback)
   - [emit()](#emitcontext)
-  - [await()](#await)
+  - [await()](#awaitkey)
 - [Runner](#runner)
   - [cancel()](#cancel)
 - [Runner.sleep()](#runnersleepseconds)
@@ -167,39 +166,26 @@ console.log(counter.get());
 ### on(callback)
 Adds a callback to the event.
 
-| Params   | Type         |
-|----------|--------------|
-| callback | `() => void` |
+| Params   | Type                                                  |
+|----------|-------------------------------------------------------|
+| callback | `(context: Context, keys: (keyof Context)[]) => void` |
 
 ```ts
-counter.on(() => {
-    console.log(counter.get());
-})
-```
-
-### onOnce(callback)
-Adds a one-time callback to the event.
-
-| Params   | Type         |
-|----------|--------------|
-| callback | `() => void` |
-
-```ts
-counter.onOnce(() => {
-  console.log(counter.get());
+counter.on((context, keys) => {
+  console.log(context, keys);
 })
 ```
 
 ### off(callback)
 Removes a callback from the event.
 
-| Params   | Type         |
-|----------|--------------|
-| callback | `() => void` |
+| Params   | Type                                                  |
+|----------|-------------------------------------------------------|
+| callback | `(context: Context, keys: (keyof Context)[]) => void` |
 
 ```ts
-const callback = () => {
-  console.log(counter.get());
+const callback = (context, keys) => {
+  console.log(context, keys);
 }
 counter.off(callback);
 ```
@@ -221,15 +207,26 @@ counter.emit({value: 1});
 counter.emit();
 ```
 
-### await()
+### await(key)
 Return: `Promise<context>`
 
 Waits for the next event emission.
 
+| Params | Type              |
+|--------|-------------------|
+| key    | `keyof Context`   |
+
+
 ```ts
-// Await event in a runner
+// Wait for any emit() call (with or without updated values)
 new Runner(function* () {
   yield counter.await();
+  console.log('Counter:', counter.get());
+});
+
+// Wait specifically for emit() when the "value" field is updated
+new Runner(function* () {
+  yield counter.await('value');
   console.log('Counter:', counter.get());
 });
 ```

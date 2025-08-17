@@ -1,4 +1,4 @@
-type Callback<Context> = (context: Context) => void;
+type Callback<Context> = (context: Context, keys: (keyof Context)[]) => void;
 
 /**
  * Event class that combines state management with event emitters.
@@ -7,7 +7,7 @@ type Callback<Context> = (context: Context) => void;
  * Listeners are triggered on `.emit()` with the latest merged context.
  *
  * - Supports mutable or immutable context (deep-frozen after each emit).
- * - Supports regular (`on`) and one-time (`onOnce`) listeners.
+ * - Supports regular (`on`) listeners.
  * - Allows awaiting the next `.emit()` via `.await()`.
  *
  * Ideal for scenarios like game signals, UI events, or shared state updates with side effects.
@@ -33,7 +33,6 @@ type Callback<Context> = (context: Context) => void;
  */
 export class Event<Context extends Record<string, any>> {
   private callbacks = new Set<Callback<Context>>();
-  private callbacksOnce = new Set<Callback<Context>>();
 
   constructor(
     private context: Context = {} as Context,
@@ -52,27 +51,33 @@ export class Event<Context extends Record<string, any>> {
     this.callbacks.delete(callback);
   }
 
-  public onOnce(callback: Callback<Context>): void {
-    this.callbacksOnce.add(callback);
-  }
-
   public emit(context: Partial<Context> = {}): Context {
     const newContext = { ...this.context, ...context };
     this.context = this.immutable ? Object.freeze(newContext) : newContext;
 
-    this.callbacks.forEach((callback) => callback(this.context));
-    this.callbacksOnce.forEach((callback) => callback(this.context));
-    this.callbacksOnce.clear();
+    this.callbacks.forEach((callback) =>
+      callback(this.context, Object.keys(context)),
+    );
 
     return newContext;
   }
 
-  public async await(): Promise<Context> {
+  public async await(key?: keyof Context): Promise<Context> {
     return new Promise((resolve) => {
-      const callback = (context: Context) => {
+      const callback = (context: Context, keys: (keyof Context)[]) => {
+        if (key) {
+          if (keys.includes(key)) {
+            this.off(callback);
+            resolve(context);
+          }
+          return;
+        }
+
+        this.off(callback);
         resolve(context);
       };
-      this.onOnce(callback);
+
+      this.on(callback);
     });
   }
 }

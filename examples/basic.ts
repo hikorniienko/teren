@@ -16,13 +16,12 @@ Loop.instance.addRender(() => {
 });
 
 // Init event / state
-const boxMoveEvent = new Event({ running: false });
-const boxCountEvent = new Event({ count: 0 });
+const boxEvent = new Event({ count: 0, running: false });
 
 // Init click and toggle running
 document.body.addEventListener('click', () => {
-  const context = boxMoveEvent.get();
-  boxMoveEvent.emit({ running: !context.running });
+  const context = boxEvent.get();
+  boxEvent.emit({ running: !context.running });
 });
 
 // Init Runners
@@ -33,8 +32,8 @@ function* clickRunner() {
   let flowBoxRunner: Runner | null = null;
 
   while (true) {
-    yield boxMoveEvent.await();
-    const context = boxMoveEvent.get();
+    yield boxEvent.await('running');
+    const context = boxEvent.get();
 
     if (context.running) {
       flowBoxRunner = new Runner(flowBox);
@@ -49,7 +48,7 @@ function* clickRunner() {
 function* flowBox() {
   while (true) {
     // Emit counter
-    yield boxCountEvent.emit({ count: boxCountEvent.get().count + 1 });
+    yield boxEvent.emit({ count: boxEvent.get().count + 1 });
 
     // Fork for rotate
     yield new Runner(rotateBox);
@@ -79,8 +78,8 @@ function* moveBox() {
 // Increment counter
 function* incrementCounter() {
   while (true) {
-    yield boxCountEvent.await();
-    const context = boxCountEvent.get();
+    yield boxEvent.await('count');
+    const context = boxEvent.get();
     box.text = `${context.count}`;
   }
 }
