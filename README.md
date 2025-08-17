@@ -333,16 +333,15 @@ Animates numeric values from `from[]` to `to[]` over time.
 
 | Params               | Type                                 | Default  |
 |----------------------|--------------------------------------|----------|
-| from                 | `Array<Record<string, unknown>>`     |          |
-| to                   | `Array<Record<string, unknown>>`     |          |
+| from                 | `Array<Record<string, any>>`         |          |
+| to                   | `Array<Record<string, any>>`         |          |
 | duration             | `number`                             |          |
 | options.easing       | `(t: number) => number \| undefined` | (t) => t |
 | options.onUpdate     | `() => void \| undefined`            |          |
-| options.smoothFactor | `number`                             | 0.02     |
 | cancellable          | `boolean`                            | true     |
 
 ```ts
-import { Runner, linear } from 'teren';
+import { Runner, easeInOutSine } from 'teren';
 
 new Runner(function* () {
     const testTween = { x: 0, y: 0 };
@@ -353,9 +352,8 @@ new Runner(function* () {
         [{ x: 100, y: 100 },{ x: 100, y: 100 }],
         2,
         {
-            easing: linear,
+            easing: easeInOutSine,
             onUpdate: () => {},
-            smoothFactor: 0.05 // 0 - 1
         },
         true // true means this tween be stopped if parent is cancelled
     );

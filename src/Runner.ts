@@ -153,14 +153,13 @@ async function race<T extends Record<string, Promise<unknown>>>(
  * );
  *  ```
  */
-function tween<T extends Array<Record<string, unknown>>>(
+function tween<T extends Array<Record<string, any>>>(
   from: T,
   to: T,
   duration: number,
   options: {
     easing?: (t: number) => number;
     onUpdate?: () => void;
-    smoothFactor?: number;
   } = {},
   cancellable: boolean = true,
 ): {
@@ -169,21 +168,37 @@ function tween<T extends Array<Record<string, unknown>>>(
   cancel: () => void;
   extraPromise: () => Promise<void>;
 } {
-  const keys = from.map((el) => Object.keys(el));
-  const prevValues = from.map((obj) => {
-    const record: Record<string, number> = {};
-    for (const key of Object.keys(obj)) {
-      if (typeof obj[key] === 'number') record[key] = obj[key] as number;
-    }
-    return record;
-  });
-  const smoothFactor = options.smoothFactor ?? 0.02;
+  const keys = from.map((el) => Object.keys(el) as (keyof typeof el)[]);
+  const initialFrom = from.map((el) => ({ ...el }));
+  const easing = options?.easing ?? ((t: number) => t);
 
   let canceled = false;
   let elapsed = 0;
   let resolve: () => void;
 
+  const finish = () => {
+    for (let i = 0; i < from.length; i++) {
+      const fromObj = from[i];
+      const toObj = to[i];
+      for (const key of keys[i]) {
+        if (
+          typeof fromObj[key] === 'number' &&
+          typeof toObj[key] === 'number'
+        ) {
+          fromObj[key] = toObj[key];
+        }
+      }
+    }
+    options?.onUpdate?.();
+  };
+
   const promise = new Promise<void>((res) => {
+    if (duration <= 0) {
+      finish();
+      res();
+      return;
+    }
+
     resolve = res;
     Loop.instance.addUpdate(step);
   });
@@ -195,29 +210,33 @@ function tween<T extends Array<Record<string, unknown>>>(
       return;
     }
 
-    elapsed += Loop.instance.dt;
-    const t = Math.min(elapsed / duration, 1);
-    const e = options?.easing ? options.easing : (t: number) => t;
+    let remainingDt = Loop.instance.dt;
 
-    for (let i = 0; i < from.length; i++) {
-      const fromObj = from[i];
-      const toObj = to[i];
-      for (const key of keys[i]) {
-        const a = fromObj[key];
-        const b = toObj[key];
-        if (typeof a === 'number' && typeof b === 'number') {
-          const target = a + (b - a) * e(t);
-          prevValues[i][key] =
-            prevValues[i][key] + (target - prevValues[i][key]) * smoothFactor;
-          fromObj[key] = prevValues[i][key];
+    while (remainingDt > 0) {
+      const dtStep = Math.min(remainingDt, 1 / 60);
+      elapsed += dtStep;
+      remainingDt -= dtStep;
+
+      const t = Math.min(elapsed / duration, 1);
+
+      for (let i = 0; i < from.length; i++) {
+        const fromObj = from[i];
+        const toObj = to[i];
+        for (const key of keys[i]) {
+          const a = initialFrom[i][key];
+          const b = toObj[key];
+          if (typeof a === 'number' && typeof b === 'number') {
+            fromObj[key] = a + (b - a) * easing(t);
+          }
         }
       }
     }
 
     options?.onUpdate?.();
 
-    if (t >= 1) {
+    if (elapsed >= duration) {
       Loop.instance.removeUpdate(step);
+      finish();
       resolve();
     }
   }

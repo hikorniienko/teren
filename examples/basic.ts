@@ -1,4 +1,4 @@
-import { Loop, Event, Runner } from '../src';
+import { Loop, Event, Runner, easeInOutSine } from '../src';
 
 import { CanvasStage } from './utils/CanvasStage';
 import { CanvasSprite } from './utils/CanvasSprite';
@@ -47,30 +47,33 @@ function* clickRunner() {
 
 // Function for move box
 function* flowBox() {
-  // Emit counter
-  yield boxCountEvent.emit({ count: boxCountEvent.get().count + 1 });
+  while (true) {
+    // Emit counter
+    yield boxCountEvent.emit({ count: boxCountEvent.get().count + 1 });
 
-  // Fork for rotate
-  yield new Runner(rotateBox);
+    // Fork for rotate
+    yield new Runner(rotateBox);
 
-  // Move box to random position
-  yield* moveBox();
-
-  // Repeat flow
-  yield new Runner(flowBox);
+    // Move box to random position
+    yield* moveBox();
+  }
 }
 
 // Rotate box
 function* rotateBox() {
   const rotation = Math.random() * 360;
-  yield Runner.tween([box as Record<string, any>], [{ rotation }], 1);
+  yield Runner.tween([box], [{ rotation }], 2, {
+    easing: easeInOutSine,
+  });
 }
 
 // Move box
 function* moveBox() {
   const x = Math.random() * window.innerWidth - window.innerWidth / 2;
   const y = Math.random() * window.innerHeight - window.innerHeight / 2;
-  yield Runner.tween([box as Record<string, any>], [{ x, y }], 2);
+  yield Runner.tween([box], [{ x, y }], 3, {
+    easing: easeInOutSine,
+  });
 }
 
 // Increment counter
