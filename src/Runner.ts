@@ -264,7 +264,7 @@ function tween<T extends Array<Record<string, any>>>(
         const a = previousState[i][key];
         const b = currentState[i][key];
         from[i][key] = a + (b - a) * alpha;
-        previousState[i][key] = from[i][key];
+        if (options?.onUpdate) previousState[i][key] = from[i][key];
       }
     }
 
