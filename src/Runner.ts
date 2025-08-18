@@ -1,4 +1,5 @@
 import { Loop } from './Loop';
+
 const IS_RUNNER = Symbol('IS_RUNNER');
 
 /**
@@ -159,7 +160,7 @@ function tween<T extends Array<Record<string, any>>>(
   duration: number,
   options: {
     easing?: (t: number) => number;
-    onUpdate?: () => void;
+    onUpdate?: (interpolated: T) => void;
   } = {},
   cancellable: boolean = true,
 ): {
@@ -168,28 +169,36 @@ function tween<T extends Array<Record<string, any>>>(
   cancel: () => void;
   extraPromise: () => Promise<void>;
 } {
-  const keys = from.map((el) => Object.keys(el) as (keyof typeof el)[]);
-  const initialFrom = from.map((el) => ({ ...el }));
+  const keys = to.map((el, i) =>
+    Object.keys(el).filter(
+      (key) =>
+        typeof from[i][key] === 'number' && typeof to[i][key] === 'number',
+    ),
+  );
+
+  const initialFrom = from.map((el, i) =>
+    Object.fromEntries(keys[i].map((key) => [key, el[key]])),
+  );
+
   const easing = options?.easing ?? ((t: number) => t);
 
   let canceled = false;
   let elapsed = 0;
   let resolve: () => void;
 
+  const FIXED_STEP = 1 / 60;
+  let accumulator = 0;
+
+  let previousState = initialFrom.map((el) => ({ ...el }));
+  let currentState = initialFrom.map((el) => ({ ...el }));
+
   const finish = () => {
     for (let i = 0; i < from.length; i++) {
-      const fromObj = from[i];
-      const toObj = to[i];
       for (const key of keys[i]) {
-        if (
-          typeof fromObj[key] === 'number' &&
-          typeof toObj[key] === 'number'
-        ) {
-          fromObj[key] = toObj[key];
-        }
+        from[i][key] = to[i][key];
       }
     }
-    options?.onUpdate?.();
+    options?.onUpdate?.(to);
   };
 
   const promise = new Promise<void>((res) => {
@@ -200,45 +209,66 @@ function tween<T extends Array<Record<string, any>>>(
     }
 
     resolve = res;
-    Loop.instance.addUpdate(step);
+    Loop.instance.addUpdate(frame);
   });
 
-  function step() {
+  function frame() {
     if (canceled) {
-      Loop.instance.removeUpdate(step);
+      Loop.instance.removeUpdate(frame);
       resolve();
       return;
     }
 
-    let remainingDt = Loop.instance.dt;
-
-    while (remainingDt > 0) {
-      const dtStep = Math.min(remainingDt, 1 / 60);
-      elapsed += dtStep;
-      remainingDt -= dtStep;
-
-      const t = Math.min(elapsed / duration, 1);
-
-      for (let i = 0; i < from.length; i++) {
-        const fromObj = from[i];
-        const toObj = to[i];
-        for (const key of keys[i]) {
-          const a = initialFrom[i][key];
-          const b = toObj[key];
-          if (typeof a === 'number' && typeof b === 'number') {
-            fromObj[key] = a + (b - a) * easing(t);
-          }
-        }
-      }
-    }
-
-    options?.onUpdate?.();
+    step();
+    renderStep();
 
     if (elapsed >= duration) {
-      Loop.instance.removeUpdate(step);
+      Loop.instance.removeUpdate(frame);
       finish();
       resolve();
     }
+  }
+
+  function step() {
+    accumulator += Loop.instance.dt;
+
+    while (accumulator >= FIXED_STEP) {
+      accumulator -= FIXED_STEP;
+      elapsed += FIXED_STEP;
+
+      const t = Math.min(elapsed / duration, 1);
+
+      for (let i = 0; i < currentState.length; i++) {
+        for (const key of keys[i]) {
+          previousState[i][key] = currentState[i][key];
+
+          const a = initialFrom[i][key];
+          const b = to[i][key];
+
+          currentState[i][key] = a + (b - a) * easing(t);
+        }
+      }
+
+      if (elapsed >= duration) {
+        accumulator = 0;
+        return;
+      }
+    }
+  }
+
+  function renderStep() {
+    const alpha = Math.min(accumulator / FIXED_STEP, 1);
+
+    for (let i = 0; i < currentState.length; i++) {
+      for (const key of keys[i]) {
+        const a = previousState[i][key];
+        const b = currentState[i][key];
+        from[i][key] = a + (b - a) * alpha;
+        previousState[i][key] = from[i][key];
+      }
+    }
+
+    options?.onUpdate?.(previousState as T);
   }
 
   return {

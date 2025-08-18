@@ -328,14 +328,14 @@ new Runner(function* () {
 Animates numeric values from `from[]` to `to[]` over time.
 
 
-| Params               | Type                                 | Default  |
-|----------------------|--------------------------------------|----------|
-| from                 | `Array<Record<string, any>>`         |          |
-| to                   | `Array<Record<string, any>>`         |          |
-| duration             | `number`                             |          |
-| options.easing       | `(t: number) => number \| undefined` | (t) => t |
-| options.onUpdate     | `() => void \| undefined`            |          |
-| cancellable          | `boolean`                            | true     |
+| Params               | Type                                                 | Default    |
+|----------------------|------------------------------------------------------|------------|
+| from                 | `Array<Record<string, any>>`                         |            |
+| to                   | `Array<Record<string, any>>`                         |            |
+| duration             | `number`                                             |            |
+| options.easing       | `(t: number) => number \| undefined`                 | (t) => t   |
+| options.onUpdate     | `(interpolated: T) => void \| undefined`             |            |
+| cancellable          | `boolean`                                            | true       |
 
 ```ts
 import { Runner, easeInOutSine } from 'teren';
