@@ -13,5 +13,5 @@ document.body.appendChild(github);
 
 const code = document.createElement('a');
 code.className = 'code';
-code.href = '#';
+code.href = 'https://github.com/hikorniienko/teren/blob/main/examples/example_01/example.ts';
 document.body.appendChild(code);
