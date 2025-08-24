@@ -3,7 +3,10 @@ import { defineConfig } from '@rsbuild/core';
 export default defineConfig({
   source: {
     entry: {
-      basic: './examples/basic.ts',
+      example_01: './examples/example_01/index.ts',
     },
+  },
+  html: {
+    title: 'Teren Examples',
   },
 });
