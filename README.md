@@ -1,11 +1,10 @@
 # teren
 Teren is a lightweight library for writing modular game logic using generators, events, state, and a controllable update loop.
 
-[See the Examples!](https://)
+[See the Example!](https://hikorniienko.github.io/teren/)
 
 ## Table of content
 - [Installation](#installation)
-- [Examples](https://)
 - [About](#about)
 - [Loop](#loop)
   - [dt](#dt)
