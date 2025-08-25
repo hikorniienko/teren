@@ -3,7 +3,7 @@ import { Loop, Event, Runner, easeInOutSine } from '../../src';
 import { CanvasStage } from '../utils/CanvasStage';
 import { CanvasSprite } from '../utils/CanvasSprite';
 
-// Simple DOM box example.
+// Simple canvas box example.
 const root = document.getElementById('root')!;
 const stage = new CanvasStage(root);
 const box = new CanvasSprite(stage.ctx, stage.canvas);
